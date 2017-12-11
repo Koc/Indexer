@@ -18,9 +18,6 @@ class BatchedIndexer implements ObservableIndexer
 
     private $options;
 
-    /**
-     * @var IndexationObserver
-     */
     private $indexationObserver;
 
     public function __construct(Provider $provider, Persister $persister, array $options = [])
@@ -36,7 +33,6 @@ class BatchedIndexer implements ObservableIndexer
             ],
             $options
         );
-        $this->indexationObserver = new NullIndexationObserver();
     }
 
     public function setIndexationObserver(IndexationObserver $indexationObserver): void
@@ -46,22 +42,23 @@ class BatchedIndexer implements ObservableIndexer
 
     public function reindex(): void
     {
+        $indexationObserver = $this->getIndexationObserver();
+
         if ($this->provider instanceof CountableProvider) {
-            $this->indexationObserver->onCount();
+            $indexationObserver->onCount();
             try {
                 $totalIdsCount = $this->provider->getIdsCount();
-                $this->indexationObserver->setTotalIdsCount($totalIdsCount);
+                $indexationObserver->setTotalIdsCount($totalIdsCount);
             } catch (\BadMethodCallException $e) {
 
             }
         }
 
-        $this->indexationObserver->onIndexationStart();
-
+        $indexationObserver->onIndexationStart();
         foreach ($this->provider->getIdsBatches($this->options['batch_size_read_ids']) as $batchNumber => $idsBatch) {
             $this->reindexIds($idsBatch);
 
-            $this->indexationObserver->onIndexationProgress(count($idsBatch));
+            $indexationObserver->onIndexationProgress(count($idsBatch));
         }
     }
 
@@ -100,8 +97,17 @@ class BatchedIndexer implements ObservableIndexer
 
     public function clear(): void
     {
-        $this->indexationObserver->onClear();
+        $this->getIndexationObserver()->onClear();
 
         $this->persister->clear();
+    }
+
+    private function getIndexationObserver(): IndexationObserver
+    {
+        if (null === $this->indexationObserver) {
+            $this->indexationObserver = new NullIndexationObserver();
+        }
+
+        return $this->indexationObserver;
     }
 }

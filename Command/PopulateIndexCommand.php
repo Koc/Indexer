@@ -40,10 +40,8 @@ class PopulateIndexCommand extends Command
             $realIndexer = $this->indexer->getInnerIndexer();
         }
 
-        $observer = new ConsoleIndexationObserver($input, $output);
-
         if ($realIndexer instanceof ObservableIndexer) {
-            $realIndexer->setIndexationObserver($observer);
+            $realIndexer->setIndexationObserver(new ConsoleIndexationObserver($input, $output));
         }
 
         if ($input->getOption('truncate')) {

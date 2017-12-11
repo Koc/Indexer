@@ -6,7 +6,7 @@ use Brouzie\Components\Indexer\CountableProvider;
 use Brouzie\Components\Indexer\Provider;
 use Psr\Log\LoggerInterface;
 
-class TracerableProvider implements Provider, CountableProvider
+class TracerableProvider implements CountableProvider
 {
     private $provider;
 
